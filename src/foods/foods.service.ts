@@ -1,30 +1,63 @@
 import { Injectable } from '@nestjs/common';
 import { CreateFoodDto } from './dto/create-food.dto';
 import { UpdateFoodDto } from './dto/update-food.dto';
-import { PrismaMysqlService, PrismaPostgresService } from 'src/prisma/prisma.service';
+import { PrismaMysqlService } from 'src/prisma/prisma.service';
+import { PaginationDto } from './dto/pagination.dto';
+import { SearchFoodDto } from './dto/search-food.dto';
 
 @Injectable()
 export class FoodsService {
-  constructor(public prismaPostgres: PrismaPostgresService, public prismaMysql: PrismaMysqlService) {}
+  constructor(public prismaMysql: PrismaMysqlService) {}
 
   create(createFoodDto: CreateFoodDto) {
     return 'This action adds a new food';
   }
 
-  findAll() {
-    return this.prismaPostgres.products.findMany({
-      take: 10,
+  async findAllMysql(paginationDto: PaginationDto) {
+    const { page = 1, limit = 10 } = paginationDto;
+    const skip = (page - 1) * limit;
+
+    const [foods, total] = await Promise.all([
+      this.prismaMysql.foods.findMany({
+        skip,
+        take: limit,
+      }),
+      this.prismaMysql.foods.count(),
+    ]);
+
+    return {
+      data: foods,
+      meta: {
+        total,
+        page,
+        limit,
+        lastPage: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  async findByCategory(categoryId: number) {
+    return this.prismaMysql.foods.findMany({
+      where: { categoryId },
     });
   }
 
-  findAllMysql() {
-    return this.prismaMysql.products.findMany({
-      take: 10,
+  async search(searchFoodDto: SearchFoodDto) {
+    const { query } = searchFoodDto;
+    return this.prismaMysql.foods.findMany({
+      where: {
+        OR: [
+          { name: { contains: query } },
+          { description: { contains: query } },
+        ],
+      },
     });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} food`;
+  async findOne(id: number) {
+    return this.prismaMysql.foods.findUnique({
+      where: { id },
+    });
   }
 
   update(id: number, updateFoodDto: UpdateFoodDto) {
