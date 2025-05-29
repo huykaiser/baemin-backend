@@ -38,7 +38,7 @@ export class FoodsService {
 
   async findByCategory(categoryId: number) {
     return this.prismaMysql.foods.findMany({
-      where: { categoryId },
+      where: { category_id : categoryId },
     });
   }
 
@@ -56,7 +56,7 @@ export class FoodsService {
 
   async findOne(id: number) {
     return this.prismaMysql.foods.findUnique({
-      where: { id },
+      where: { food_id : id },
     });
   }
 

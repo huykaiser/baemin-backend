@@ -11,7 +11,7 @@ export class CategoriesService {
 
     findOne(id: number) {
         return this.prismaMysql.foodCategories.findUnique({
-        where: { id },
+        where: { category_id : id },
         include: { foods: true },
     });
   }

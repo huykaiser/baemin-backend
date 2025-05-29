@@ -9,76 +9,172 @@ datasource db {
 }
 
 model foodCategories {
-  id          Int      @id @default(autoincrement())
-  name        String   @db.VarChar(255)
-  description String?  @db.Text
-  imageUrl    String?  @db.VarChar(255)
-  createdAt   DateTime @default(now()) @db.Timestamp(0)
-  updatedAt   DateTime @default(now()) @db.Timestamp(0)
-  foods       foods[]
+  category_id   Int          @id @default(autoincrement())
+  name          String       @db.VarChar(50)
+  description   String?      @db.Text
+  image_url     String?      @db.VarChar(255)
+  restaurant_id Int?
+  restaurants   restaurants? @relation(fields: [restaurant_id], references: [restaurant_id], onDelete: Cascade, onUpdate: NoAction, map: "foodCategories_ibfk_1")
+  foods         foods[]
+
+  @@index([restaurant_id], map: "restaurant_id")
 }
 
 model foods {
-  id             Int            @id @default(autoincrement())
-  name           String         @db.VarChar(255)
-  price          Decimal        @db.Decimal(10, 2)
-  description    String?        @db.Text
-  imageUrl       String?        @db.VarChar(255)
-  rating         Float?         @default(0) @db.Float
-  stock          Int            @default(0)
-  categoryId     Int
-  createdAt      DateTime       @default(now()) @db.Timestamp(0)
-  updatedAt      DateTime       @default(now()) @db.Timestamp(0)
-  foodCategories foodCategories @relation(fields: [categoryId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "foods_ibfk_1")
-  orderItems     orderItems[]
+  food_id          Int             @id @default(autoincrement())
+  name             String          @db.VarChar(100)
+  description      String?         @db.Text
+  price            Decimal         @db.Decimal(10, 2)
+  image_url        String?         @db.VarChar(255)
+  is_available     Boolean?        @default(true)
+  preparation_time Int?
+  category_id      Int?
+  restaurant_id    Int
+  created_at       DateTime?       @default(now()) @db.Timestamp(0)
+  updated_at       DateTime?       @default(now()) @db.Timestamp(0)
+  stock            Int             @default(0)
+  cart_items       cart_items[]
+  foodCategories   foodCategories? @relation(fields: [category_id], references: [category_id], onUpdate: NoAction, map: "foods_ibfk_1")
+  restaurants      restaurants     @relation(fields: [restaurant_id], references: [restaurant_id], onDelete: Cascade, onUpdate: NoAction, map: "foods_ibfk_2")
+  order_items      order_items[]
 
-  @@index([categoryId], map: "categoryId")
-}
-
-model orderItems {
-  id       Int     @id @default(autoincrement())
-  orderId  Int
-  foodId   Int
-  quantity Int
-  price    Decimal @db.Decimal(10, 2)
-  orders   orders  @relation(fields: [orderId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "orderItems_ibfk_1")
-  foods    foods   @relation(fields: [foodId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "orderItems_ibfk_2")
-
-  @@index([foodId], map: "foodId")
-  @@index([orderId], map: "orderId")
+  @@index([category_id], map: "category_id")
+  @@index([restaurant_id], map: "restaurant_id")
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model orders {
-  id          Int          @id @default(autoincrement())
-  userId      Int
-  totalAmount Decimal      @db.Decimal(10, 2)
-  status      String       @default("PENDING") @db.VarChar(20)
-  address     String       @db.Text
-  phone       String       @db.Text
-  createdAt   DateTime     @default(now()) @db.Timestamp(0)
-  updatedAt   DateTime     @default(now()) @db.Timestamp(0)
-  orderItems  orderItems[]
-  users       users        @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "orders_ibfk_1")
+  order_id                Int                    @id @default(autoincrement())
+  user_id                 Int
+  restaurant_id           Int
+  order_date              DateTime?              @default(now()) @db.Timestamp(0)
+  status                  orders_status?         @default(pending)
+  total_amount            Decimal                @db.Decimal(10, 2)
+  delivery_fee            Decimal?               @default(0.00) @db.Decimal(10, 2)
+  discount_amount         Decimal?               @default(0.00) @db.Decimal(10, 2)
+  delivery_address        String                 @db.Text
+  contact_phone           String                 @db.VarChar(20)
+  special_instructions    String?                @db.Text
+  payment_method          orders_payment_method?
+  payment_status          orders_payment_status? @default(pending)
+  estimated_delivery_time DateTime?              @db.Timestamp(0)
+  order_items             order_items[]
+  users                   users                  @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "orders_ibfk_1")
+  restaurants             restaurants            @relation(fields: [restaurant_id], references: [restaurant_id], onDelete: NoAction, onUpdate: NoAction, map: "orders_ibfk_2")
 
-  @@index([userId], map: "userId")
+  @@index([restaurant_id], map: "restaurant_id")
+  @@index([user_id], map: "user_id")
 }
 
 model users {
-  id        Int        @id @default(autoincrement())
-  email     String     @unique(map: "email") @db.VarChar(255)
-  password  String     @db.Text
-  name      String     @db.Text
-  username  String     @db.Text
-  phone     String     @db.Text
-  address   String?    @db.Text
-  createdAt DateTime   @default(now()) @db.Timestamp(0)
-  updatedAt DateTime   @default(now()) @db.Timestamp(0)
-  role      users_role @default(user)
-  orders    orders[]
+  user_id       Int        @id @default(autoincrement())
+  username      String     @unique(map: "username") @db.VarChar(50)
+  email         String     @unique(map: "email") @db.VarChar(100)
+  password_hash String     @db.VarChar(255)
+  first_name    String     @db.VarChar(50)
+  last_name     String     @db.VarChar(50)
+  phone_number  String?    @db.VarChar(20)
+  address       String?    @db.Text
+  role          users_role @default(user)
+  created_at    DateTime?  @default(now()) @db.Timestamp(0)
+  updated_at    DateTime?  @default(now()) @db.Timestamp(0)
+  carts         carts[]
+  orders        orders[]
+}
+
+model cart_items {
+  cart_item_id         Int     @id @default(autoincrement())
+  cart_id              Int
+  food_id              Int
+  quantity             Int     @default(1)
+  special_instructions String? @db.Text
+  carts                carts   @relation(fields: [cart_id], references: [cart_id], onDelete: Cascade, onUpdate: NoAction, map: "cart_items_ibfk_1")
+  foods                foods   @relation(fields: [food_id], references: [food_id], onDelete: NoAction, onUpdate: NoAction, map: "cart_items_ibfk_2")
+
+  @@index([cart_id], map: "cart_id")
+  @@index([food_id], map: "food_id")
+}
+
+model carts {
+  cart_id       Int          @id @default(autoincrement())
+  user_id       Int
+  restaurant_id Int
+  created_at    DateTime?    @default(now()) @db.Timestamp(0)
+  updated_at    DateTime?    @default(now()) @db.Timestamp(0)
+  cart_items    cart_items[]
+  users         users        @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "carts_ibfk_1")
+  restaurants   restaurants  @relation(fields: [restaurant_id], references: [restaurant_id], onDelete: NoAction, onUpdate: NoAction, map: "carts_ibfk_2")
+
+  @@index([restaurant_id], map: "restaurant_id")
+  @@index([user_id], map: "user_id")
+}
+
+model order_items {
+  order_item_id        Int     @id @default(autoincrement())
+  order_id             Int
+  food_id              Int
+  quantity             Int     @default(1)
+  unit_price           Decimal @db.Decimal(10, 2)
+  total_price          Decimal @db.Decimal(10, 2)
+  special_instructions String? @db.Text
+  orders               orders  @relation(fields: [order_id], references: [order_id], onDelete: Cascade, onUpdate: NoAction, map: "order_items_ibfk_1")
+  foods                foods   @relation(fields: [food_id], references: [food_id], onDelete: NoAction, onUpdate: NoAction, map: "order_items_ibfk_2")
+
+  @@index([food_id], map: "food_id")
+  @@index([order_id], map: "order_id")
+}
+
+model restaurants {
+  restaurant_id  Int              @id @default(autoincrement())
+  name           String           @db.VarChar(100)
+  description    String?          @db.Text
+  address        String           @db.Text
+  phone_number   String?          @db.VarChar(20)
+  email          String?          @db.VarChar(100)
+  logo_url       String?          @db.VarChar(255)
+  kind           String?          @db.VarChar(100)
+  rating_star    Float?           @db.Float
+  rating_count   Int              @default(0)
+  opening_time   DateTime?        @db.Time(0)
+  closing_time   DateTime?        @db.Time(0)
+  price_from     Decimal          @db.Decimal(10, 2)
+  price_to       Decimal          @db.Decimal(10, 2)
+  delivery_fee   Decimal?         @default(0.00) @db.Decimal(10, 2)
+  minimum_order  Decimal?         @default(0.00) @db.Decimal(10, 2)
+  is_active      Boolean?         @default(true)
+  created_at     DateTime?        @default(now()) @db.Timestamp(0)
+  updated_at     DateTime?        @default(now()) @db.Timestamp(0)
+  carts          carts[]
+  foodCategories foodCategories[]
+  foods          foods[]
+  orders         orders[]
 }
 
 enum users_role {
   admin
   user
+}
+
+enum orders_status {
+  pending
+  confirmed
+  preparing
+  ready
+  out_for_delivery
+  delivered
+  cancelled
+}
+
+enum orders_payment_method {
+  cash_on_delivery
+  credit_card_debit_card @map("credit_card/debit_card")
+  ZaloPay
+  Momo
+}
+
+enum orders_payment_status {
+  pending
+  paid
+  failed
+  refunded
 }
