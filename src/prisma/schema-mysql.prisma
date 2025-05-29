@@ -59,13 +59,12 @@ model orders {
   createdAt   DateTime     @default(now()) @db.Timestamp(0)
   updatedAt   DateTime     @default(now()) @db.Timestamp(0)
   orderItems  orderItems[]
-  users       users        @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "orders_ibfk_1")
 
   @@index([userId], map: "userId")
 }
 
 model users {
-  id        BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  id        Int      @id @default(autoincrement())
   email     String   @unique(map: "email") @db.VarChar(255)
   password  String   @db.Text
   name      String   @db.Text
@@ -74,5 +73,4 @@ model users {
   address   String?  @db.Text
   createdAt DateTime @default(now()) @db.Timestamp(0)
   updatedAt DateTime @default(now()) @db.Timestamp(0)
-  orders    orders[]
 }

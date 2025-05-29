@@ -35,7 +35,6 @@ export class AuthService {
 
   async login(authDto: AuthDto): Promise<string> {
     const { email, password } = authDto;
-
     const user = await this.prismaMysql.users.findUnique({ where: { email } });
 
     if (!user || !(await bcrypt.compare(password, user.password))) {
