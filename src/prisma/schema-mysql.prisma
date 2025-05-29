@@ -9,7 +9,7 @@ datasource db {
 }
 
 model foodCategories {
-  id          BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  id          Int      @id @default(autoincrement())
   name        String   @db.VarChar(255)
   description String?  @db.Text
   imageUrl    String?  @db.VarChar(255)
@@ -19,14 +19,14 @@ model foodCategories {
 }
 
 model foods {
-  id             BigInt         @id @default(autoincrement()) @db.UnsignedBigInt
+  id             Int            @id @default(autoincrement())
   name           String         @db.VarChar(255)
   price          Decimal        @db.Decimal(10, 2)
   description    String?        @db.Text
   imageUrl       String?        @db.VarChar(255)
   rating         Float?         @default(0) @db.Float
   stock          Int            @default(0)
-  categoryId     BigInt         @db.UnsignedBigInt
+  categoryId     Int
   createdAt      DateTime       @default(now()) @db.Timestamp(0)
   updatedAt      DateTime       @default(now()) @db.Timestamp(0)
   foodCategories foodCategories @relation(fields: [categoryId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "foods_ibfk_1")
@@ -36,9 +36,9 @@ model foods {
 }
 
 model orderItems {
-  id       BigInt  @id @default(autoincrement()) @db.UnsignedBigInt
-  orderId  BigInt  @db.UnsignedBigInt
-  foodId   BigInt  @db.UnsignedBigInt
+  id       Int     @id @default(autoincrement())
+  orderId  Int
+  foodId   Int
   quantity Int
   price    Decimal @db.Decimal(10, 2)
   orders   orders  @relation(fields: [orderId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "orderItems_ibfk_1")
@@ -50,8 +50,8 @@ model orderItems {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model orders {
-  id          BigInt       @id @default(autoincrement()) @db.UnsignedBigInt
-  userId      BigInt       @db.UnsignedBigInt
+  id          Int          @id @default(autoincrement())
+  userId      Int
   totalAmount Decimal      @db.Decimal(10, 2)
   status      String       @default("PENDING") @db.VarChar(20)
   address     String       @db.Text
@@ -59,6 +59,7 @@ model orders {
   createdAt   DateTime     @default(now()) @db.Timestamp(0)
   updatedAt   DateTime     @default(now()) @db.Timestamp(0)
   orderItems  orderItems[]
+  users       users        @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "orders_ibfk_1")
 
   @@index([userId], map: "userId")
 }
@@ -74,6 +75,7 @@ model users {
   createdAt DateTime   @default(now()) @db.Timestamp(0)
   updatedAt DateTime   @default(now()) @db.Timestamp(0)
   role      users_role @default(user)
+  orders    orders[]
 }
 
 enum users_role {
