@@ -64,13 +64,19 @@ model orders {
 }
 
 model users {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique(map: "email") @db.VarChar(255)
-  password  String   @db.Text
-  name      String   @db.Text
-  username  String   @db.Text
-  phone     String   @db.Text
-  address   String?  @db.Text
-  createdAt DateTime @default(now()) @db.Timestamp(0)
-  updatedAt DateTime @default(now()) @db.Timestamp(0)
+  id        Int        @id @default(autoincrement())
+  email     String     @unique(map: "email") @db.VarChar(255)
+  password  String     @db.Text
+  name      String     @db.Text
+  username  String     @db.Text
+  phone     String     @db.Text
+  address   String?    @db.Text
+  createdAt DateTime   @default(now()) @db.Timestamp(0)
+  updatedAt DateTime   @default(now()) @db.Timestamp(0)
+  role      users_role @default(user)
+}
+
+enum users_role {
+  admin
+  user
 }
