@@ -8,10 +8,71 @@ datasource db {
   url      = env("DATABASE_MYSQL_URL")
 }
 
-model products {
-  id           Int     @id @default(autoincrement())
-  name         String  @db.VarChar(255)
-  price        Decimal @db.Decimal(10, 2)
-  manufacturer String? @db.VarChar(255)
-  attributes   Json?
+model foodCategories {
+  id          BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  name        String   @db.VarChar(255)
+  description String?  @db.Text
+  imageUrl    String?  @db.VarChar(255)
+  createdAt   DateTime @default(now()) @db.Timestamp(0)
+  updatedAt   DateTime @default(now()) @db.Timestamp(0)
+  foods       foods[]
+}
+
+model foods {
+  id             BigInt         @id @default(autoincrement()) @db.UnsignedBigInt
+  name           String         @db.VarChar(255)
+  price          Decimal        @db.Decimal(10, 2)
+  description    String?        @db.Text
+  imageUrl       String?        @db.VarChar(255)
+  rating         Float?         @default(0) @db.Float
+  stock          Int            @default(0)
+  categoryId     BigInt         @db.UnsignedBigInt
+  createdAt      DateTime       @default(now()) @db.Timestamp(0)
+  updatedAt      DateTime       @default(now()) @db.Timestamp(0)
+  foodCategories foodCategories @relation(fields: [categoryId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "foods_ibfk_1")
+  orderItems     orderItems[]
+
+  @@index([categoryId], map: "categoryId")
+}
+
+model orderItems {
+  id       BigInt  @id @default(autoincrement()) @db.UnsignedBigInt
+  orderId  BigInt  @db.UnsignedBigInt
+  foodId   BigInt  @db.UnsignedBigInt
+  quantity Int
+  price    Decimal @db.Decimal(10, 2)
+  orders   orders  @relation(fields: [orderId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "orderItems_ibfk_1")
+  foods    foods   @relation(fields: [foodId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "orderItems_ibfk_2")
+
+  @@index([foodId], map: "foodId")
+  @@index([orderId], map: "orderId")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model orders {
+  id          BigInt       @id @default(autoincrement()) @db.UnsignedBigInt
+  userId      BigInt       @db.UnsignedBigInt
+  totalAmount Decimal      @db.Decimal(10, 2)
+  status      String       @default("PENDING") @db.VarChar(20)
+  address     String       @db.Text
+  phone       String       @db.Text
+  createdAt   DateTime     @default(now()) @db.Timestamp(0)
+  updatedAt   DateTime     @default(now()) @db.Timestamp(0)
+  orderItems  orderItems[]
+  users       users        @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "orders_ibfk_1")
+
+  @@index([userId], map: "userId")
+}
+
+model users {
+  id        BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  email     String   @unique(map: "email") @db.VarChar(255)
+  password  String   @db.Text
+  name      String   @db.Text
+  username  String   @db.Text
+  phone     String   @db.Text
+  address   String?  @db.Text
+  createdAt DateTime @default(now()) @db.Timestamp(0)
+  updatedAt DateTime @default(now()) @db.Timestamp(0)
+  orders    orders[]
 }
