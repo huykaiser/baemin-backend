@@ -37,6 +37,7 @@ export class FoodsService {
   }
 
   async findByCategory(categoryId: number) {
+    console.log('findByCategory with categoryId', categoryId);
     return this.prismaMysql.foods.findMany({
       where: { category_id : categoryId },
     });
